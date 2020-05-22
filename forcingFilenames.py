@@ -86,7 +86,8 @@ def getGLORYSfilename(confM2R, year, month, myvar):
         filename = confM2R.modelpath + 'dataset-global-reanalysis-phys-001-009-ran-fr-glorys2v3-monthly-' \
                    + str(myvar.lower()) + '/GLORYS2V3_ORCA025_' + str(confM2R.start_year) + str(confM2R.start_month) \
                    + '15_' + str(production) + '_' + str(myvarPrefix) + '.nc'
-
+    #MYMOD
+    filename = confM2R.modelpath + 'global_reanalysis_20181216.nc'
     return filename
 
 

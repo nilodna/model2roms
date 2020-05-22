@@ -30,8 +30,8 @@ def run():
 
             clim2bry.writebry(confM2R)
 
-      #  if confM2R.createAtmosForcing:
-      #      atmosForcing.createAtmosFileUV(confM2R)
+#        if confM2R.createatmosforcing:
+#            atmosForcing.createAtmosFileUV(confM2R)
 
     if confM2R.decimategridfile:
         decimateGrid.createGrid(confM2R.grdROMS, "/Users/trondkr/Projects/KINO/GRID/kino_1600m_18072015.nc",

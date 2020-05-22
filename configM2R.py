@@ -1,12 +1,12 @@
 import time, calendar
 from netCDF4 import Dataset, date2num, num2date
-import model2roms
+#import model2roms
 import IOstation
 import clim2bry
-import decimateGrid
+#import decimateGrid
 import grd
 import numpy as np
-import atmosForcing
+#import atmosForcing
 import sys
 from datetime import datetime, timedelta
 import os
@@ -38,11 +38,18 @@ class Model2romsConfig(object):
             subset[2] = -179
             subset[3] = 360
 
+        if self.outgrid == "SBB":
+            subset[0] = -35 # min lat
+            subset[1] = -15 # max lat
+            subset[2] = -60 # min lon [-180/180]
+            subset[3] = -30 # max lon [-180/180]
+
         return subset
 
     # Define abbreviation for the run: sued to name output files etc.
     def defineabbreviation(self):
         return {"A20": "a20",
+                "SBB": 'sbb',
                 "ROHO800": "roho800"}[self.outgrid]
 
     def showinfo(self):
@@ -104,21 +111,21 @@ class Model2romsConfig(object):
         return {'SODA': ['temperature', 'salinity', 'ssh', 'uvel', 'vvel'],
                 'SODA3': ['temp', 'salt', 'ssh', 'u', 'v'],
                 'SODA3_5DAY': ['temp', 'salt', 'ssh', 'u', 'v'],
-                'GLORYS': ['votemper', 'vosaline', 'sossheig', 'vozocrtx', 'vomecrty', 'iicevelu', 'iicevelv',
-                           'ileadfra', 'iicethic'],
+#                'GLORYS': ['votemper', 'vosaline', 'sossheig', 'vozocrtx', 'vomecrty', 'iicevelu', 'iicevelv',
+#                           'ileadfra', 'iicethic'],
+                'GLORYS': ['thetao', 'so', 'zos', 'uo', 'vo'],
                 'WOAMONTHLY': ['temperature', 'salinity'],
                 'NORESM': ['templvl', 'salnlvl', 'sealv', 'uvellvl', 'vvellvl', 'iage', 'uvel', 'vvel', 'aice', 'hi',
                            'hs','dissic','talk','po4','no3','si','o2']}[self.oceanindatatype]
 
     def defineromsgridpath(self):
-        return {'A20': '/Users/trondkr/Dropbox/NIVA/A20/Grid/A20niva_grd_v1.nc', # '/cluster/projects/nn9412k/A20/Grid/A20niva_grd_v1.nc',
-                'ROHO800': '/cluster/projects/nn9490k/ROHO800/Grid/ROHO800_grid_fix3.nc'}[self.outgrid]
+        return {'SBB': '/home/danilo/phd/ROMS/projects/runs/etopo_sbb/input/regional_5km.nc'}[self.outgrid]
 
     def defineoceanforcingdatapath(self):
-        return {'SODA3': "/Volumes/DATASETS/SODA3.3.1/OCEAN/", 
+        return {'SODA3': "/home/danilo/phd/ROMS/data/SODA3.3.1/", 
                 'SODA3_5DAY': "/cluster/work/users/trondk/SODA3.3.2/",  
                 'NORESM': "/cluster/projects/nn9412k/A20/FORCING/RCP85_ocean/",
-                'GLORYS': "/cluster/projects/nn9412k/glorys/",
+                'GLORYS': "/home/danilo/phd/ROMS/data/GLORYS/",
                 'WOAMONTHLY': "/Users/trondkr/Projects/is4dvar/createSSS/"}[self.oceanindatatype]
 
     def defineatmosphericforcingpath(self):
@@ -136,7 +143,7 @@ class Model2romsConfig(object):
         # EDIT ===================================================================
         # Set showprogress to "False" if you do not want to see the progress
         # indicator for horizontal interpolation.
-        self.showprogress = True
+        self.showprogress = False
         # Set compileAll to True if you want automatic re-compilation of all the
         # fortran files necessary to run model2roms. Options are "gfortran" or "ifort". Edit
         # compile.py to add other Fortran compilers.
@@ -158,12 +165,12 @@ class Model2romsConfig(object):
         # Create the bry, init, and clim files for a given grid and input data
         self.createoceanforcing = True
         # Create atmospheric forcing for the given grid
-        self.createatmosforcing = False  # currently in beta stages
+        self.createatmosforcing = True  # currently in beta stages
         # Create a smaller resolution grid based on your original. Decimates every second for
         # each time run
         self.decimategridfile = False
         # Write ice values to file (for Arctic regions)
-        self.writeice = True
+        self.writeice = False
         # Write biogeochemistry values to file
         self.writebcg = False
         # ROMS sometimes requires input of ice and ssh, but if you dont have these write zero files to file
@@ -183,7 +190,7 @@ class Model2romsConfig(object):
         #  Define what grid type you wnat to interpolate from (input MODEL data)
         # Options:
         # 1. SODA, 2. SODAMONTHLY, 3.WOAMONTHLY, 4. NORESM, 4. GLORYS, 5. SODA3, 6. SODA3_5DAY
-        self.oceanindatatype = 'SODA3'
+        self.oceanindatatype = 'GLORYS'
         self.atmosindatatype = 'ERA5'
 
         # Define contact info for final NetCDF files
@@ -226,23 +233,23 @@ class Model2romsConfig(object):
         # OUT GRIDTYPES ------------------------------------------------------------------------------
         # Define what grid type you wnat to interpolate to
         # Options: This is just the name of your grid used to identify your selection later
-        self.outgrid = 'A20' #"ROHO800"
+        self.outgrid = 'SBB' #"ROHO800"
         self.outgridtype = "ROMS"
 
         # Subset input data. If you have global data you may want to seubset these to speed up reading. Make
         # sure that your input data are cartesian (0-360 or -180:180, -90:90)
-        self.subsetindata = False
+        self.subsetindata = True
         if self.subsetindata:
             self.subset = self.definesubsetforindata()
 
         # Define nmber of output depth levels
-        self.nlevels = 40
+        self.nlevels = 30
         # Define the grid stretching properties (leave default if uncertain what to pick)
         self.vstretching = 4
         self.vtransform = 2
         self.theta_s = 7.0
-        self.theta_b = 0.1
-        self.tcline = 250.0
+        self.theta_b = 5.0
+        self.tcline = 50.0
         self.hc = 250
 
         # PATH TO FORCINGDATA --------------------------------------------------------------------
@@ -259,12 +266,12 @@ class Model2romsConfig(object):
 
         # DATE AND TIME DETAILS ---------------------------------------------------------
         # Define the period to create forcing for
-        self.start_year = 2002
-        self.end_year = 2002
-        self.start_month = 5
-        self.end_month = 6
-        self.start_day = 15
-        self.end_day = 31
+        self.start_year = 2014
+        self.end_year = 2014
+        self.start_month = 1
+        self.end_month = 3
+        self.start_day = 9
+        self.end_day = 1
 
         if int(calendar.monthrange(self.start_year, self.start_month)[1]) < self.start_day:
             self.start_day = int(calendar.monthrange(self.start_year, self.start_month)[1])

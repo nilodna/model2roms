@@ -34,7 +34,7 @@ def verticalinterpolation(myvar, array1, array2, grdROMS, grdMODEL):
 
     if myvar in ['salinity','temperature','O3_c','O3_TA','N1_p','N3_n','N5_s','O2_o']:
         print('\nStart vertical interpolation for %s (dimensions=%s x %s)' % (myvar, grdROMS.xi_rho, grdROMS.eta_rho))
-        outdata = np.empty((outINDEX_ST), dtype=np.float, order='Fortran')
+        outdata = np.empty((outINDEX_ST), dtype=np.float, order='F')
 
         outdata = interp.interpolation.dovertinter(np.asarray(outdata, order='F'),
                                                    np.asarray(array1, order='F'),
@@ -135,11 +135,11 @@ def rotate(grdROMS, grdMODEL, data, u, v):
     urot = np.zeros((int(grdMODEL.nlevels), int(grdROMS.eta_rho), int(grdROMS.xi_rho)), np.float)
     vrot = np.zeros((int(grdMODEL.nlevels), int(grdROMS.eta_rho), int(grdROMS.xi_rho)), np.float)
 
-    urot, vrot = interp.interpolation.rotate(np.asarray(urot, order='Fortran'),
-                                             np.asarray(vrot, order='Fortran'),
-                                             np.asarray(u, order='Fortran'),
-                                             np.asarray(v, order='Fortran'),
-                                             np.asarray(grdROMS.angle, order='Fortran'),
+    urot, vrot = interp.interpolation.rotate(np.asarray(urot, order='F'),
+                                             np.asarray(vrot, order='F'),
+                                             np.asarray(u, order='F'),
+                                             np.asarray(v, order='F'),
+                                             np.asarray(grdROMS.angle, order='F'),
                                              int(grdROMS.xi_rho),
                                              int(grdROMS.eta_rho),
                                              int(grdMODEL.nlevels))
@@ -152,16 +152,16 @@ def interpolate2uv(grdROMS, grdMODEL, urot, vrot):
 
     # Interpolate from RHO points to U and V points for velocities
 
-    Zu = interp.interpolation.rho2u(np.asarray(Zu, order='Fortran'),
-                                    np.asarray(urot, order='Fortran'),
+    Zu = interp.interpolation.rho2u(np.asarray(Zu, order='F'),
+                                    np.asarray(urot, order='F'),
                                     int(grdROMS.xi_rho),
                                     int(grdROMS.eta_rho),
                                     int(grdMODEL.nlevels))
 
     # plotData.contourMap(grdROMS,grdMODEL,Zu[0,:,:],"1",'urot')
 
-    Zv = interp.interpolation.rho2v(np.asarray(Zv, order='Fortran'),
-                                    np.asarray(vrot, order='Fortran'),
+    Zv = interp.interpolation.rho2v(np.asarray(Zv, order='F'),
+                                    np.asarray(vrot, order='F'),
                                     int(grdROMS.xi_rho),
                                     int(grdROMS.eta_rho),
                                     int(grdMODEL.nlevels))
@@ -211,8 +211,8 @@ def getTime(confM2R, year, month, day, ntime):
     elif confM2R.oceanindatatype == 'NS8KMZ':
         jdref = date2num(datetime(1948, 1, 1), units="days since 1948-01-01 00:00:00", calendar="standard")
     elif confM2R.oceanindatatype == 'GLORYS':
-        jdref = date2num(datetime(1948, 1, 1), cdf.variables["time_counter"].units,
-                         calendar=cdf.variables["time_counter"].calendar)
+        jdref = date2num(datetime(1948, 1, 1), cdf.variables["time"].units,
+                         calendar=cdf.variables["time"].calendar)
     elif confM2R.oceanindatatype == 'NS8KM':
         jdref = date2num(datetime(1948, 1, 1), cdf.variables["ocean_time"].units,
                          calendar=cdf.variables["ocean_time"].calendar)
@@ -247,8 +247,8 @@ def getTime(confM2R, year, month, day, ntime):
     if confM2R.oceanindatatype == 'GLORYS':
         # Find the day and month that the GLORYS file respresents based on the year and ID number.
         # Each file represents a 1 month average.
-        mycalendar = cdf.variables["time_counter"].calendar
-        myunits = cdf.variables["time_counter"].units
+        mycalendar = cdf.variables["time"].calendar
+        myunits = cdf.variables["time"].units
         currentdate = datetime(year, month, day)
         jd = date2num(currentdate, myunits, calendar=mycalendar)
 

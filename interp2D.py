@@ -30,7 +30,7 @@ def laplacefilter(field, threshold, toxi, toeta):
     field = ex.extrapolate.fill(int(1), int(toxi),
                                 int(1), int(toeta),
                                 float(tx), float(critx), float(cor), float(mxs),
-                                np.asarray(field, order='Fortran'),
+                                np.asarray(field, order='F'),
                                 int(toxi),
                                 int(toeta))
     return field
